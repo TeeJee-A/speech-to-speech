@@ -59,17 +59,19 @@ export default function Home() {
 
   const handleSubmit = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    const audioData = new FormData();
-    audioData.append("file", audio![0]);
-    const languageData = new FormData();
-    languageData.append("target", language?.code!);
+	let data = new FormData();
+ 	data.append("target", language?.code!);
+    data.append("file", audio![0]);
     try {
-      const res = await axios.post("", { //endpoint
-        audioData,
-        languageData,
-      });
+		const res = await axios({
+			method: "post",
+			url: "http://localhost:8000/model/speech-to-speech",
+			data: data,
+			headers: { "Content-Type": "multipart/form-data" } 
+		})
       console.log({ res });
     } catch (error) {
+
       console.log({ error });
     }
   };
