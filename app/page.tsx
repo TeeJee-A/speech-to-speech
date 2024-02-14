@@ -2,6 +2,9 @@
 
 import { ChangeEvent, useState, MouseEvent } from "react";
 import axios from "axios";
+import ReactPlayer from "react-player";
+import AudioPlayer from "react-h5-audio-player";
+import "react-h5-audio-player/lib/styles.css";
 
 const allLanguages = [
   {
@@ -63,8 +66,12 @@ export default function Home() {
     audioData.append("file", audio![0]);
     const languageData = new FormData();
     languageData.append("target", language?.code!);
+    const formDataObj = Object.fromEntries(audioData.entries());
+    const langDataObj = Object.fromEntries(languageData.entries());
+    console.log({ formDataObj });
+    console.log({ langDataObj });
     try {
-      const res = await axios.post("", { //endpoint
+      const res = await axios.post("", {
         audioData,
         languageData,
       });
@@ -122,6 +129,9 @@ export default function Home() {
           </button>
         </div>
       </form>
+      <audio controls>
+        <source src="/paus.wav" type="audio/wav" />
+      </audio>
     </main>
   );
 }
