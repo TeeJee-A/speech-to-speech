@@ -1,6 +1,5 @@
 "use client";
-
-import { ChangeEvent, useState, MouseEvent } from "react";
+import { ChangeEvent, useState, MouseEvent, useEffect } from "react";
 import axios from "axios";
 
 const allLanguages = [
@@ -34,6 +33,7 @@ interface languageType {
 export default function Home() {
   const [audio, setAudio] = useState<FileList>();
   const [language, setLanguage] = useState<languageType>();
+  const [audioTranslation, setAudioTranslation] = useState<any>(null);
   const [open, setOpen] = useState(false);
 
   const audioFile = (event: ChangeEvent<HTMLInputElement>) => {
@@ -67,14 +67,19 @@ export default function Home() {
 			method: "post",
 			url: "http://localhost:8000/model/speech-to-speech",
 			data: data,
+			responseType: 'blob',
 			headers: { "Content-Type": "multipart/form-data" } 
 		})
-      console.log({ res });
+		var blob = new Blob([res.data], {type: "audio/wav"});
+		console.log({blob})
+		var url = URL.createObjectURL(blob);
+		console.log(url);
+		setAudioTranslation(url);
     } catch (error) {
-
       console.log({ error });
     }
   };
+  useEffect(() => {}, [audioTranslation])
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -124,6 +129,7 @@ export default function Home() {
           </button>
         </div>
       </form>
+		<audio className="w-96 h-14 border" src={audioTranslation} controls></audio>
     </main>
   );
 }
