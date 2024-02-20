@@ -1,10 +1,7 @@
 "use client";
-
-import { ChangeEvent, useState, MouseEvent } from "react";
+import { ChangeEvent, useState, MouseEvent, useEffect } from "react";
 import axios from "axios";
-import ReactPlayer from "react-player";
-import AudioPlayer from "react-h5-audio-player";
-import "react-h5-audio-player/lib/styles.css";
+import { Spinner } from "@material-tailwind/react";
 
 const allLanguages = [
   {
@@ -37,7 +34,9 @@ interface languageType {
 export default function Home() {
   const [audio, setAudio] = useState<FileList>();
   const [language, setLanguage] = useState<languageType>();
+  const [audioTranslation, setAudioTranslation] = useState<any>(null);
   const [open, setOpen] = useState(false);
+  const [load, setLoad] = useState(true);
 
   const audioFile = (event: ChangeEvent<HTMLInputElement>) => {
     event.preventDefault();
@@ -62,24 +61,28 @@ export default function Home() {
 
   const handleSubmit = async (event: MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    const audioData = new FormData();
-    audioData.append("file", audio![0]);
-    const languageData = new FormData();
-    languageData.append("target", language?.code!);
-    const formDataObj = Object.fromEntries(audioData.entries());
-    const langDataObj = Object.fromEntries(languageData.entries());
-    console.log({ formDataObj });
-    console.log({ langDataObj });
+    setLoad(false);
+    let data = new FormData();
+    data.append("target", language?.code!);
+    if (!audio) return;
+    data.append("file", audio[0]);
     try {
-      const res = await axios.post("", {
-        audioData,
-        languageData,
+      const res = await axios({
+        method: "post",
+        url: "http://13.38.42.214:8000/model/speech-to-speech",
+        data: data,
+        responseType: "blob",
+        headers: { "Content-Type": "multipart/form-data" },
       });
-      console.log({ res });
+      if (res) setLoad(true);
+      var blob = new Blob([res.data], { type: "audio/wav" });
+      var url = URL.createObjectURL(blob);
+      setAudioTranslation(url);
     } catch (error) {
       console.log({ error });
     }
   };
+  useEffect(() => {}, [audioTranslation]);
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-between p-24">
@@ -106,7 +109,7 @@ export default function Home() {
           {language?.language || "Choose Language"}
         </button>
         {open && (
-          <div className="text-white w-full bg-transparent border p-3 rounded-[30px] flex justify-center items-center flex-col space-y-3">
+          <div className="text-white w-full bg-transparent border p-3 rounded-[30px] flex justify-center items-center flex-col spacnpm e-y-3">
             {allLanguages.map((items, index) => (
               <button
                 onClick={(event) =>
@@ -121,17 +124,25 @@ export default function Home() {
           </div>
         )}
         <div className="w-full flex justify-end items-center">
-          <button
-            onClick={(event) => handleSubmit(event)}
-            className="bg-white w-32 h-10 rounded-full text-black"
-          >
-            Submit
-          </button>
+          {load ? (
+            <button
+              onClick={(event) => handleSubmit(event)}
+              className={`bg-white w-32 h-10 rounded-full text-black`}
+            >
+              Submit
+            </button>
+          ) : (
+            <div className="bg-white w-32 h-10 rounded-full flex justify-center items-center">
+              <Spinner color="blue-gray" className="w-6 h-6 " />
+            </div>
+          )}
         </div>
       </form>
-      <audio controls>
-        <source src="/paus.wav" type="audio/wav" />
-      </audio>
+      <audio
+        className="w-96 h-14 border"
+        src={audioTranslation}
+        controls
+      ></audio>
     </main>
   );
 }
